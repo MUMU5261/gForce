@@ -50,6 +50,11 @@
         android:layout_height="wrap_content"
         android:text="W:\nX:\nY:\nZ:\n" />
 
+    <TextView
+        android:id="@+id/text_emg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="C1:\nC2:\nC3:\nC4:\n" />
 
 </LinearLayout>
 

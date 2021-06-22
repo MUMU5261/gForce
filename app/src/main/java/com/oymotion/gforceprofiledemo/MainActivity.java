@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private final int ACCESS_LOCATION = 1;
     private List<BluetoothDevice> bluetoothDevices = new ArrayList<BluetoothDevice>();
     private boolean isScanning = false;
+    private GforceDatabaseHelper dbHelper;
 
     @SuppressLint("WrongConstant")
     private void getPermission() {
@@ -81,12 +82,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED)
+                != PackageManager.PERMISSION_GRANTED) // ??? without {},if need to add to include following two sentences, or compile following single line code.
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
         ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.READ_CONTACTS);
+                Manifest.permission.READ_CONTACTS); //?????
 
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "ble_not_supported", Toast.LENGTH_SHORT).show();
@@ -108,6 +109,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         gForceProfile = new GForceProfile(this);
+
+        dbHelper = new GforceDatabaseHelper(this, "Quaternion.db", null, 1);
+        dbHelper.getWritableDatabase();
+
     }
 
     @OnClick(R.id.scan_toggle_btn)
@@ -194,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // EMG choose and transfer view
     private void onAdapterItemClick(ScanResult scanResults) {
         final Intent intent = new Intent(this, DeviceActivity.class);
         intent.putExtra(DeviceActivity.EXTRA_DEVICE_NAME, scanResults.getBluetoothDevice().getName());

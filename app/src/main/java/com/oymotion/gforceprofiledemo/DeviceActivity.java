@@ -1,5 +1,8 @@
 package com.oymotion.gforceprofiledemo;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +18,7 @@ import com.oymotion.gforceprofile.DataNotificationCallback;
 import com.oymotion.gforceprofile.GForceProfile;
 
 import java.util.Arrays;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,6 +42,7 @@ public class DeviceActivity extends AppCompatActivity {
     private String macAddress;
     private TextView textViewState;
     private TextView textViewQuaternion;
+    private TextView textViewEMG;
     private TextView textFirmwareVersion;
     private String textErrorMsg = "";
     private Handler handler;
@@ -80,9 +85,11 @@ public class DeviceActivity extends AppCompatActivity {
                     public void run() {
                         btn_start.setText("Start Data Notification");
                         textViewQuaternion.setText("W: " + "\nX: " + "\nY: " + "\nZ: ");
+                        textViewEMG.setText("C1: " + "\nC2: " + "\nC3: " + "\nC4: ");
                         textFirmwareVersion.setText("FirmwareVersion: ");
                     }
                 });
+
             }
         }
 
@@ -91,8 +98,10 @@ public class DeviceActivity extends AppCompatActivity {
     @OnClick(R.id.set)
     public void onSetClick() {
         if (state != GForceProfile.BluetoothDeviceStateEx.ready || setSucceeded) return;
+        //DNF_QUATERNION | DNF_EMG_RAW |DNF_EULERANGLE
+        int flags = GForceProfile.DataNotifFlags.DNF_EMG_RAW | GForceProfile.DataNotifFlags.DNF_QUATERNION | GForceProfile.DataNotifFlags.DNF_EULERANGLE;
 
-        GForceProfile.GF_RET_CODE result = gForceProfile.setDataNotifSwitch(GForceProfile.DataNotifFlags.DNF_QUATERNION, new CommandResponseCallback() {
+        GForceProfile.GF_RET_CODE result = gForceProfile.setDataNotifSwitch(flags, new CommandResponseCallback() {
             @Override
             public void onSetCommandResponse(int resp) {
                 Log.i("DeviceActivity", "onSetCommandResponse: " + resp);
@@ -129,6 +138,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     @OnClick(R.id.start)
     public void onStartClick() {
+
         if (notifying) {
             btn_start.setText("Start Data Notification");
 
@@ -141,7 +151,10 @@ public class DeviceActivity extends AppCompatActivity {
             gForceProfile.startDataNotification(new DataNotificationCallback() {
                 @Override
                 public void onData(byte[] data) {
-                    if (data[0] == GForceProfile.NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {
+//                    NTF_QUAT_FLOAT_DATA | NTF_EMG_ADC_DATA |NTF_EULER_DATA
+                    if (data[0] == GForceProfile.NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {  //NTF_QUAT_FLOAT_DATA | NTF_EMG_ADC_DATA
+                        System.out.println(data [0]);
+                        System.out.println(data.length);
                         Log.i("DeviceActivity","Quat data: " + Arrays.toString(data));
 
                         byte[] W = new byte[4];
@@ -159,11 +172,48 @@ public class DeviceActivity extends AppCompatActivity {
                         float y = getFloat(Y);
                         float z = getFloat(Z);
 
+
                         runOnUiThread(new Runnable() {
                             public void run() {
                                 textViewQuaternion.setText("W: " + w + "\nX: " + x + "\nY: " + y + "\nZ: " + z);
+//                              textViewEMG.setText(data.toString());
                             }
                         });
+
+//
+
+//                         Handler handler1 = new Handler();
+//                         Runnable runnable = new Runnable() {
+//                             @Override
+//                             public void run() {
+//                                 System.out.println("runinsert");
+//                                 handler1.postDelayed(this, Time);
+//                                 SQLiteDatabase db = dbHelper.getWritableDatabase();
+//                                 ContentValues values = new ContentValues();
+//                                 values.put("w",w);
+//                                 values.put("x",x);
+//                                 values.put("y",y);
+//                                 values.put("z",z);
+//                                 values.put("user_id", "1");
+//                                 values.put("section", "test");
+//                                 values.put("timestamp",df.format(new Date()));
+//                                 db.insert("Quaternion", null, values);
+//                                 values.clear();
+//                             }
+//                         };
+//                         handler1.postDelayed(runnable, Time);
+
+
+                    } else if(data[0] == GForceProfile.NotifDataType.NTF_EMG_ADC_DATA && data.length == 129){
+                        System.out.println("EMG");
+                        System.out.println(data [0]);
+                        System.out.println(data.length);
+
+                    }else if(data[0] == GForceProfile.NotifDataType.NTF_EULER_DATA && data.length == 13){
+                        System.out.println("NTF_EULER_DATA");
+                        System.out.println(data [0]);
+                        System.out.println(data.length);
+
                     }
                 }
             });
@@ -202,7 +252,6 @@ public class DeviceActivity extends AppCompatActivity {
         System.out.println(accum);
         return Float.intBitsToFloat(accum);
     }
-
     void updateState() {
         GForceProfile.BluetoothDeviceStateEx newState = gForceProfile.getState();
 
@@ -252,6 +301,7 @@ public class DeviceActivity extends AppCompatActivity {
         gForceProfile = new GForceProfile(this);
         textViewState = this.findViewById(R.id.text_device_state);
         textViewQuaternion = this.findViewById(R.id.text_quaternion);
+        textViewEMG = this.findViewById(R.id.text_emg);
         textFirmwareVersion = this.findViewById(R.id.text_firmware_version);
 
         btn_getFirmwareVersion.setEnabled(false);

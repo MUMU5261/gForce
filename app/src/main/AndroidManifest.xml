@@ -14,13 +14,15 @@
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.GForceProfileDemo.NoActionBar">
-            <intent-filter>
+           <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
-        <activity android:name="com.oymotion.gforceprofiledemo.DeviceActivity"/>
+        <activity android:name="com.oymotion.gforceprofiledemo.DeviceActivity" />
+
     </application>
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
